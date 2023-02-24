@@ -1,0 +1,91 @@
+0. Restore: Delete the tc interface
+
+sudo tc qdisc del dev {nw_interface1} root
+
+1. Experiment 1: Set the NTP server score to 0
+
+sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 50ms 20ms
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 139.178.70.122 flowid 1:3
+
+Node.js command:
+node exp1_calcalphabeta.js
+
+2. Experiment 2: Add delay to the NTP monitor
+
+2-1. Add delay to all outbound traffic of the monitor
+
+// Delay that does not affect the NTP score
+
+sudo tc qdisc add dev {nw_interface1} root netem delay 10ms 4ms
+sudo tc qdisc del dev {nw_interface1} root // Restore
+
+// Delay that does not affect the NTP score
+
+sudo tc qdisc add dev {nw_interface1} root netem delay 500ms 20ms
+sudo tc qdisc del dev {nw_interface1} root // Restore
+
+2-2. Add delay only to the top stratum of the monitor
+
+sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 10ms 4ms
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 118.220.200.235 flowid 1:3
+sudo tc qdisc del dev {nw_interface1} root // Restore
+
+
+2-3. Add delay to multiple queues
+
+sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 500ms
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.68.125 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 61.205.120.130 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.26.125 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 169.229.128.134 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 164.67.62.199 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.54.253 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.34.125 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 130.133.1.10 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 193.162.159.194 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 192.36.143.234 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 193.0.0.229 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.114.125 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 118.220.200.235 flowid 1:3
+
+
+3. Experiment 3: Adding delay to 2 NTP servers using 2 NTP monitors.
+3-1) Adding 500ms delay to 2 servers using 2 monitors:
+Korean Monitor
+sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 500ms
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 163.152.23.172 flowid 1:3
+sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 129.132.121.177 flowid 1:3
+
+US Monitor
+sudo tc qdisc add dev {nw2_interface1} root handle 1: prio
+sudo tc qdisc add dev {nw2_interface1} parent 1:3 handle 30: netem delay 500ms
+sudo tc filter add dev {nw2_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 163.152.23.172 flowid 1:3
+sudo tc filter add dev {nw2_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 129.132.121.177 flowid 1:3
+
+European Monitor
+sudo tc qdisc add dev {nw3_interface1} root handle
+
+3-2) Adding 3000ms delay to 2 servers using 2 monitors:
+US Monitor
+sudo tc qdisc change dev {nw2_interface1} parent 1:3 handle 30: netem delay 3000ms
+
+Korean Monitor
+sudo tc qdisc change dev {nw_interface1} parent 1:3 handle 30: netem delay 3000ms
+
+Experiment end
+sudo tc qdisc del dev {nw2_interface1} root
+sudo tc qdisc del dev {nw_interface1} root
+
+Checking the generated conditions
+sudo tc qdisc show dev {nw_interface1}
+sudo tc class show dev {nw_interface1}
+sudo tc filter show dev {nw_interface1}
+
+sudo tc qdisc show dev {nw2_interface1}
+sudo tc class show dev {nw2_interface1}
+sudo tc filter show dev {nw2_interface1}
+
