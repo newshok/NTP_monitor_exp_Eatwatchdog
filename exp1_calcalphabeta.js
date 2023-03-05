@@ -42,6 +42,7 @@ const converter = require('convert-csv-to-array');
 
   if (refresh_cnt % 2 == 0){
   refresh_cnt++;
+  // The IP entered in the variable "resp_URL" in the "exp1_calcalfabeta.js" file means the IP of the victim NTP server being attacked.
   var resp_URL = 'https://www.ntppool.org/scores/163.152.23.170/log?limit=' + (refresh_cnt * 2) + '&monitor=*';
   var resp = await axios.get(
 	resp_URL,
@@ -67,7 +68,7 @@ const converter = require('convert-csv-to-array');
   const extractedCode = $('body').first().html();
   // Save the extracted data to a CSV file
   var extractedStr = extractedCode;
-  fs.writeFile('/home/isslab_owner/바탕화면/ntpservercrawl/script/ntpserverscore.csv', extractedStr, err => {
+  fs.writeFile('/home/isslab_owner/desktop/ntpservercrawl/script/ntpserverscore.csv', extractedStr, err => {
     if (err) {
       console.error(err)
       return
