@@ -34,7 +34,7 @@ sudo tc qdisc del dev {nw_interface1} root // Restore
 
 
 2-3. Add delay to multiple queues
-
+// In Experiment 2, it is necessary to process the IP of NTP servers used in Sanity Check separately in order to bypass Sanity Check and distort the monitoring results.
 sudo tc qdisc add dev {nw_interface1} root handle 1: prio
 sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 500ms
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.68.125 flowid 1:3

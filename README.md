@@ -26,17 +26,72 @@ If an attacker intentionally fails the monitoring station’s sanity check, the 
 3. Installation Guide
 
 3-1) Software for execution
-- tc(Traffic Control)
-- nodeJS
-- ntpd
-- ntppool-monitor : Even if you install this software, you need to obtain an authentication key to run the software. Therefore, Experiment 2 and Experiment 3 should participate in the monitor beta tester or configure the virtual environment through Kubernetes before conducting the experiment.
+- tc(Traffic Control) : iproute2 5.5.0-1ubunutu1
+- nodeJS v18.14.2
+- ntpd 4.2.8p12@1.3728-o
+- ntppool-monitor : Even if you install this software, you need to obtain an authentication key to run the software. Therefore, Experiment 2 and Experiment 3 should participate in the monitor beta tester before conducting the experiment.
 
-3-2) Web page for observation of experiment results
-web page : https://web.beta.grundclock.com/en/
-* The experimenter can check the logs and graphs of the NTP server registered in the NTP Pool, and the activity status of the monitor.
+3-2) Presets
+Machine : Laptop or desktop where ntpd can be installed.
+OS : Ubuntu 20.04 LTS version(Client or Server version) or earlier (for higher versions, "chronyd" may be installed and "ntpd" may need to be installed separately.)
+Minimum number of machines required per experiment
+ - Experiment 1 : NTP Server 1, Monitor 1(More than one.)
+ - Experiment 2 : NTP Server 1, Monitor 1(More than one.)
+ - Experiment 3 : NTP Server 1, Monitors 2(More than two.)
+NTP Version : NTPv4
+
+3-3) NTP Pool setting
+- Registering an NTP Server with an NTP Pool
+Web page 1 : https://manage.beta.grundclock.com/manage
+Web page 2 : https://web.beta.grundclock.com/en/join.html
+For the experiment, it is necessary to join the NTP pool and register the server. Follow the "Web page 1" link and write the email you want to join under the "Login/Add server" button. If the administrator approves, click the button to log in to the administrator screen.
+In order to register an NTP server, a machine with NTP installed using a static IP is required.
+When you sign up and log in, you can view information about your registered NTP server and monitor machines in the left sidebar.
+Related information can also be found on "Web page 2".
+
+- Registering a Monitor with NTP Pool
+Web page 3 : https://community.ntppool.org/c/monitor-operators/13
+To register a monitor with NTP Pool, you must obtain a pre-registered beta tester qualification.
+The beta tester is currently operated by a small number of members, and only members with permission from the operator can sign up.
+Although you are not currently receiving additional subscriptions, you must contact the operator (Ask Bjørn Hansen) by email to register the monitor.
+"Web page 3" is a community page for beta testers participating in monitoring activities.
+The following description is a guide related to how to install the "NTP Pool Monitor" posted by the operator in the community.
+---------------------------------------------------------------------------
+These are the instructions for installing a monitor on the beta system. If you run into a specific problem, please start a new thread in this category to make it easier for others to find.
+The default packages are available in an apt/deb repository (debian and ubuntu) and .rpm, with builds for i386, amd64 and arm64. There are also binaries available for FreeBSD and other languages supported by Go can be added. Please let me know if you need something else than these Linux flavors.
+The repository installation instructions are at https://builds.ntppool.dev/repo/
+Note that the monitoring agent for the beta site is only in the testing flavors for now. On RedHat-flavor systems you need
+
+  yum --enablerepo=ntppool-test install -y ntppool-monitor - REDHAT
+  sudo apt install ntppool-monitor - UBUNTU
+
+1) To register a monitor go to the new monitors page on the beta manage site and add the IP address of the monitor (IPv4 and IPv6 are separate monitors, even if they run on the same server).
+2) Verify that the “airport code” is reasonable and then send me the IP and what the public name of the monitor should be (typically I’ve used the nearest big city or similar). I’ll input this this in the system and switch the status from pending to testing.
+3) When the monitor has been marked for testing you can go back to the manage site and issue API keys. It’ll provide you a .json file you can download.
+4) Place the .json file (named something like uslax1-xyz123.test.mon.ntppool.dev.json) into the directory /etc/ntpmon (make sure it’s readable by the ntpmon user). Working files (cached authentication tokens and certificates) are in /var/run/ntpmon.
+5) Start an instance of the daemon specifying the monitor name (same as the config file without the .json extension).
+sudo systemctl enable --now ntppool-monitor@uslax1-xyz123.test.mon.ntppool.dev
+6) watch the logs with sudo journalctl -f -u ntppool-monitor@'*'
+
+In testing mode the monitor will only do an occasional check of each system in the beta system, but this alone will be very helpful for me when developing and testing the new scoring algorithms and logic for choosing appropriate “nearby” monitors for each NTP server.
+---------------------------------------------------------------------------
+
+3-4) NTP Server configuration
+If you need to set up a synchronization server for your NTP server and monitor for the convenience of your experiment, you can follow these steps:
+
+1) Enter 'sudo apt install ntp' in the Linux console window.
+2) Enter 'vi /etc/ntp.conf' in the Linux console window.
+3) The domain address is the default setting after the part that says 'server'. You can annotate this part and enter the domain or IP of the synchronization server.
+* We recommend that you do not use domains or IPs registered with NTP Pool. If possible, we recommend synchronizing with the Stratum 1 server.
+4) Restart NTP by typing 'service ntpd restart' in the console window after saving settings.
+5) Enter 'ntpq -p' command to check NTP synchronization status.
+
+3-5) Web page for observation of experiment results
+web page 4 : https://web.beta.grundclock.com/scores/
+* The experimenter can view the logs and graphs of the NTP servers registered in the NTP pool and the status of operations on the monitor. On this webpage, you can check your score by entering the IP of the NTP server registered on the beta site.
 
 4. Usage
-/* All experimental results can be found in the Score log and graph of the Victim NTP server. */
+/* All experimental results can be found in the Score log(web page 1) and graph of the Victim NTP server. */
 
 4-1) Experiment 1
 * tc command : If you are familiar with the 'tc' command, you can properly categorize the interface or class.
@@ -54,6 +109,12 @@ node exp1_calcalphabeta.js
 sudo tc qdisc del dev {nw_interface1} root
 
 4-2) Experiment 2
+
+ *Experiment 2 Constraints
+1) The monitor must also be a server that serves as an NTP server.
+2) The monitor must be at least 2 Startum.
+If the above two conditions are met, the 'ntpd' and 'ntpdate' commands can be used to determine the synchronization server of the monitor.
+
 * Add delay to all outbound traffic of the monitor
 
 sudo tc qdisc add dev {nw_interface1} root netem delay 500ms 20ms
