@@ -61,7 +61,9 @@ The beta tester is currently operated by a small number of members, and only mem
 Although you are not currently receiving additional subscriptions, you must contact the operator (Ask Bjørn Hansen) by email to register the monitor.
 "Web page 3" is a community page for beta testers participating in monitoring activities.
 The following description is a guide related to how to install the "NTP Pool Monitor" posted by the operator in the community.
+
 ---------------------------------------------------------------------------
+
 These are the instructions for installing a monitor on the beta system. If you run into a specific problem, please start a new thread in this category to make it easier for others to find.
 The default packages are available in an apt/deb repository (debian and ubuntu) and .rpm, with builds for i386, amd64 and arm64. There are also binaries available for FreeBSD and other languages supported by Go can be added. Please let me know if you need something else than these Linux flavors.
 The repository installation instructions are at https://builds.ntppool.dev/repo/
