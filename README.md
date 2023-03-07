@@ -42,15 +42,20 @@ NTP Version : NTPv4
 
 3-3) NTP Pool setting
 - Registering an NTP Server with an NTP Pool
+
 Web page 1 : https://manage.beta.grundclock.com/manage
+
 Web page 2 : https://web.beta.grundclock.com/en/join.html
+
 For the experiment, it is necessary to join the NTP pool and register the server. Follow the "Web page 1" link and write the email you want to join under the "Login/Add server" button. If the administrator approves, click the button to log in to the administrator screen.
 In order to register an NTP server, a machine with NTP installed using a static IP is required.
 When you sign up and log in, you can view information about your registered NTP server and monitor machines in the left sidebar.
 Related information can also be found on "Web page 2".
 
 - Registering a Monitor with NTP Pool
+
 Web page 3 : https://community.ntppool.org/c/monitor-operators/13
+
 To register a monitor with NTP Pool, you must obtain a pre-registered beta tester qualification.
 The beta tester is currently operated by a small number of members, and only members with permission from the operator can sign up.
 Although you are not currently receiving additional subscriptions, you must contact the operator (Ask Bjørn Hansen) by email to register the monitor.
@@ -63,6 +68,7 @@ The repository installation instructions are at https://builds.ntppool.dev/repo/
 Note that the monitoring agent for the beta site is only in the testing flavors for now. On RedHat-flavor systems you need
 
   yum --enablerepo=ntppool-test install -y ntppool-monitor - REDHAT
+
   sudo apt install ntppool-monitor - UBUNTU
 
 1) To register a monitor go to the new monitors page on the beta manage site and add the IP address of the monitor (IPv4 and IPv6 are separate monitors, even if they run on the same server).
@@ -73,7 +79,9 @@ Note that the monitoring agent for the beta site is only in the testing flavors 
 sudo systemctl enable --now ntppool-monitor@uslax1-xyz123.test.mon.ntppool.dev
 6) watch the logs with sudo journalctl -f -u ntppool-monitor@'*'
 
+
 In testing mode the monitor will only do an occasional check of each system in the beta system, but this alone will be very helpful for me when developing and testing the new scoring algorithms and logic for choosing appropriate “nearby” monitors for each NTP server.
+
 ---------------------------------------------------------------------------
 
 3-4) NTP Server configuration
@@ -97,11 +105,15 @@ web page 4 : https://web.beta.grundclock.com/scores/
 * tc command : If you are familiar with the 'tc' command, you can properly categorize the interface or class.
 
 sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+
 sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 50ms 20ms // 50ms & 20ms is optional value for network delay
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 139.178.70.122 flowid 1:3 // '139.178.70.122' is monitor's IP. You can easily find the monitor IP corresponding to the NTP Pool domain with the 'nslookup' command.
 
 * Node.js command:
+
 node exp1_calcalphabeta.js
+
 // The IP value of the variable "resp_URL" must be changed to continuously check the score of the NTP server being attacked.
 
 * Restore: Delete the tc interface
@@ -111,8 +123,11 @@ sudo tc qdisc del dev {nw_interface1} root
 4-2) Experiment 2
 
  *Experiment 2 Constraints
+
 1) The monitor must also be a server that serves as an NTP server.
+
 2) The monitor must be at least 2 Startum.
+
 If the above two conditions are met, the 'ntpd' and 'ntpdate' commands can be used to determine the synchronization server of the monitor.
 
 * Add delay to all outbound traffic of the monitor
@@ -122,29 +137,47 @@ sudo tc qdisc add dev {nw_interface1} root netem delay 500ms 20ms
 * Add delay only to the top stratum of the monitor
 
 sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+
 sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 10ms 4ms
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst {upper_stratum_NTP_server_IP} flowid 1:3 // 'upper_stratum_NTP_server_IP' is an NTP server on the upper stratum of the monitor. If the monitor also serves as an NTP server, you can check what the top NTP server is with the 'ntpd' command or the 'ntpdate' command.
 
 * Avoiding Sanity Check : Each IP refers to the IP returned from the domain address that is hard-coded in the monitor source code, and if the domain name is changed or the IP is changed, the IP list to be entered must be changed to suit the experimental environment.
 
 sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+
 sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 500ms
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.68.125 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 61.205.120.130 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.26.125 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 169.229.128.134 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 164.67.62.199 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.54.253 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.34.125 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 130.133.1.10 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 193.162.159.194 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 192.36.143.234 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 193.0.0.229 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 17.253.114.125 flowid 1:3
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst 118.220.200.235 flowid 1:3
 
 * Excute script
+
 node exp2_sandm.js
+
 // The IPs stored in the 'beta_NTP_servers' variable are a list of NTP servers found on the beta site and as of July 2022.
 
 * Restore: Delete the tc interface
@@ -152,34 +185,51 @@ node exp2_sandm.js
 sudo tc qdisc del dev {nw_interface1} root
 
 4-3) Experiment 3
+
 // In order to reproduce this experiment, it is necessary to be able to control at least two monitors.
 
 * Region 1 Monitor
+
 sudo tc qdisc add dev {nw_interface1} root handle 1: prio
+
 sudo tc qdisc add dev {nw_interface1} parent 1:3 handle 30: netem delay 500ms
+
 sudo tc filter add dev {nw_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst {Victim NTP Server} flowid 1:3
 
 * Region 2 Monitor
+
 sudo tc qdisc add dev {nw2_interface1} root handle 1: prio
+
 sudo tc qdisc add dev {nw2_interface1} parent 1:3 handle 30: netem delay 500ms
+
 sudo tc filter add dev {nw2_interface1} protocol ip parent 1:0 prio 3 u32 match ip dst {Victim NTP Server} flowid 1:3
 
 * Delete the tc interface
+
 ** Region 1 Monitor
+
 sudo tc qdisc del dev {nw_interface1} root
+
 ** Region 2 Monitor
+
 sudo tc qdisc del dev {nw2_interface1} root
 
 5. Development Environment
+
 5-1) System Specifications
+
 The Xeon server desktop (Intel® Xeon® CPU ES-2620 v4 2.10 GHz 16 cores, 256 GB RAM),
 Ubuntu 20.04 Server
 
 6. Contributing
+
 Improved code and bug reporting are welcome. You can contribute directly to GitHub, or contact the code author by mail.
+
 Code Author Email:
-1) jgsong@isslab.korea.ac.kr
-2) newshok@naver.com
+
+- jgsong@isslab.korea.ac.kr
+
+- newshok@naver.com
 
 7. License
 
